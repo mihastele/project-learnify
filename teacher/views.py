@@ -1,5 +1,6 @@
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from content.models import ContentUnit
@@ -14,6 +15,8 @@ from .serializers import LessonCreateSerializer
 
 
 class TeacherViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
     @action(detail=False, methods=["post"])
     def create_lesson(self, request):
         serializer = LessonCreateSerializer(
