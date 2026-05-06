@@ -1,3 +1,4 @@
-// API base URL — change this to your backend server address.
-// When running locally with the Django dev server, use localhost.
-export const API_BASE = 'http://localhost:8000/api';
+const configuredBase = import.meta.env.VITE_API_BASE_URL?.trim();
+
+// Use the local Vite proxy by default so browser requests stay same-origin.
+export const API_BASE = configuredBase || '/api';

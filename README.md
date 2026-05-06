@@ -29,7 +29,9 @@ npm run build        # production build
 npm run preview      # preview production build
 ```
 
-The PWA uses the same Django backend API. Set the backend URL in `pwa/src/api/config.ts`. By default it points to `http://localhost:8000/api`.
+The PWA uses the same Django backend API. In local development, the Vite dev server proxies `/api` to `http://localhost:8000`, so the browser stays on a single origin.
+
+If you need to target a different backend, set `VITE_API_BASE_URL` in the PWA environment to the full API root, for example `http://localhost:8000/api`.
 
 ## Data flow
 
