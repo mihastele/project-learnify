@@ -1,6 +1,13 @@
 from rest_framework import serializers
 
-from .models import Badge, DailyActivity, LearnerBadge, LearnerStats
+from .models import Badge, DailyActivity, LearnerBadge, LearnerStats, CanvasGame
+
+
+class CanvasGameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CanvasGame
+        fields = ["id", "name", "description", "created_by", "tools_config", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class BadgeSerializer(serializers.ModelSerializer):

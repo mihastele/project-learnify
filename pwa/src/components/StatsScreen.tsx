@@ -76,11 +76,6 @@ export default function StatsScreen({
             <span className={styles.streakNum}>{longestStreak}</span>
             <span className={styles.streakLabel}>Best</span>
           </div>
-          <div className={styles.streakCard}>
-            <span className={styles.streakIcon}>🎯</span>
-            <span className={styles.streakNum}>{accuracy}%</span>
-            <span className={styles.streakLabel}>Accuracy</span>
-          </div>
         </div>
       </div>
 
@@ -90,11 +85,7 @@ export default function StatsScreen({
         <div className={styles.statsGrid}>
           <div className={styles.statItem}>
             <span className={styles.statValue}>{totalCorrect}</span>
-            <span className={styles.statLabel}>Correct</span>
-          </div>
-          <div className={styles.statItem}>
-            <span className={styles.statValue}>{totalIncorrect}</span>
-            <span className={styles.statLabel}>Incorrect</span>
+            <span className={styles.statLabel}>Correct answers</span>
           </div>
           <div className={styles.statItem}>
             <span className={styles.statValue}>{totalSessions}</span>

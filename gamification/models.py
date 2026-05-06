@@ -92,3 +92,20 @@ class DailyActivity(models.Model):
 
     def __str__(self) -> str:
         return f"Activity({self.learner}) {self.date}: {self.xp_earned}XP"
+
+
+class CanvasGame(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(
+        "auth.User", on_delete=models.CASCADE, related_name="canvas_games"
+    )
+    tools_config = models.JSONField(
+        default=dict, help_text="JSON configuration for reusable tools like boxes, buttons, etc."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return self.name

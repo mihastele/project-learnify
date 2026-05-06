@@ -6,12 +6,14 @@ from .views import (
     GamificationViewSet,
     LearnerBadgeViewSet,
     LearnerStatsViewSet,
+    CanvasGameViewSet,
 )
 
 router = DefaultRouter()
 router.register(r"badges", BadgeViewSet)
 router.register(r"stats", LearnerStatsViewSet, basename="learner-stats")
 router.register(r"gamification", GamificationViewSet, basename="gamification")
+router.register(r"canvas-games", CanvasGameViewSet, basename="canvas-games")
 
 urlpatterns = router.urls
 

@@ -26,6 +26,12 @@ class Learner(models.Model):
         related_name="learner_profile",
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    teacher_proposal_status = models.CharField(
+        max_length=20,
+        choices=[('NONE', 'None'), ('PENDING', 'Pending'), ('APPROVED', 'Approved'), ('REJECTED', 'Rejected')],
+        default='NONE'
+    )
+    is_teacher_approved = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         user_info = self.user.username if self.user else f"anon-{self.id.hex[:8]}"

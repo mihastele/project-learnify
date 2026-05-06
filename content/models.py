@@ -135,6 +135,15 @@ class Item(models.Model):
     sort_order = models.IntegerField(default=0)
     points = models.PositiveIntegerField(default=10)
     tags = models.ManyToManyField(Tag, blank=True, related_name="items")
+    media_resource = models.ForeignKey(
+        MediaResource,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="linked_items"
+    )
+    ai_target_audio = models.FileField(upload_to="ai_pronunciation/", blank=True, null=True)
+    ai_target_features = models.JSONField(default=dict, blank=True)
 
     class Meta:
         ordering = ["sort_order", "item_type"]

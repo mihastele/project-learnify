@@ -11,6 +11,9 @@ from rest_framework.response import Response
 from .models import Attempt, ItemState, Learner
 from .serializers import AttemptSerializer, ItemStateSerializer, LearnerSerializer
 from .srs import update_item_state
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
 
 DEFAULT_NEXT_ITEMS_LIMIT = 20
 
@@ -77,6 +80,53 @@ class LearnerViewSet(viewsets.ModelViewSet):
         )
         from gamification.serializers import LearnerStatsSerializer
         return Response(LearnerStatsSerializer(stats).data)
+
+    @action(detail=True, methods=["post"])
+    def request_teacher_access(self, request, pk=None):
+        learner = self.get_object()
+        learner.teacher_proposal_status = 'PENDING'
+        learner.save()
+        return Response({'status': 'Teacher access requested', 'teacher_proposal_status': learner.teacher_proposal_status})
+
+class AuthViewSet(viewsets.ViewSet):
+    @action(detail=False, methods=['post'])
+    def register(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        if not username or not password:
+            return Response({'error': 'Username and password required'}, status=status.HTTP_400_BAD_REQUEST)
+        if User.objects.filter(username=username).exists():
+            return Response({'error': 'Username taken'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        user = User.objects.create_user(username=username, password=password)
+        learner = Learner.objects.create(user=user)
+        token, _ = Token.objects.get_or_create(user=user)
+        
+        return Response({
+            'token': token.key,
+            'learner_id': learner.id,
+            'username': user.username,
+            'is_teacher_approved': learner.is_teacher_approved,
+            'teacher_proposal_status': learner.teacher_proposal_status
+        })
+
+    @action(detail=False, methods=['post'])
+    def login(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(username=username, password=password)
+        if user:
+            learner, _ = Learner.objects.get_or_create(user=user)
+            token, _ = Token.objects.get_or_create(user=user)
+            return Response({
+                'token': token.key,
+                'learner_id': learner.id,
+                'username': user.username,
+                'is_teacher_approved': learner.is_teacher_approved,
+                'teacher_proposal_status': learner.teacher_proposal_status
+            })
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 
 class AttemptViewSet(viewsets.ModelViewSet):

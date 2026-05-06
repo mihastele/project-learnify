@@ -5,13 +5,14 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .models import Badge, DailyActivity, LearnerBadge, LearnerStats
+from .models import Badge, DailyActivity, LearnerBadge, LearnerStats, CanvasGame
 from .serializers import (
     BadgeSerializer,
     DailyActivitySerializer,
     LeaderboardEntrySerializer,
     LearnerBadgeSerializer,
     LearnerStatsSerializer,
+    CanvasGameSerializer,
 )
 
 
@@ -187,3 +188,51 @@ class GamificationViewSet(viewsets.ViewSet):
         stats.daily_xp_goal = goal
         stats.save()
         return Response(LearnerStatsSerializer(stats).data)
+
+
+class CanvasGameViewSet(viewsets.ModelViewSet):
+    queryset = CanvasGame.objects.all()
+    serializer_class = CanvasGameSerializer
+
+    @action(detail=True, methods=["post"])
+    def feedback(self, request, pk=None):
+        game = self.get_object()
+        learner_id = request.data.get("learner_id")
+        result = request.data.get("result")  # 'win' or 'lose'
+        
+        if not learner_id or not result:
+            return Response({"error": "learner_id and result ('win' or 'lose') are required."}, status=400)
+            
+        xp = XP_PER_CORRECT if result == "win" else XP_PER_INCORRECT
+        
+        # We can reuse the gamification logic by instantiating GamificationViewSet manually 
+        # or just updating stats directly here. Let's update directly for simplicity.
+        stats, _ = LearnerStats.objects.get_or_create(
+            learner_id=learner_id,
+            defaults={"id": uuid.uuid4()},
+        )
+        stats.xp += xp
+        stats.level = max(1, (stats.xp // 100) + 1)
+        
+        if result == "win":
+            stats.total_correct += 1
+        else:
+            stats.total_incorrect += 1
+            
+        today = date.today()
+        if stats.daily_xp_date != today:
+            stats.daily_xp_earned = 0
+            stats.daily_xp_date = today
+        stats.daily_xp_earned += xp
+        stats.total_sessions += 1
+        stats.save()
+        
+        activity, _ = DailyActivity.objects.get_or_create(
+            learner_id=learner_id, date=today,
+            defaults={"id": uuid.uuid4()},
+        )
+        activity.xp_earned += xp
+        activity.items_completed += 1
+        activity.save()
+        
+        return Response({"message": f"Feedback processed. Awarded {xp} XP.", "game": game.name, "xp_awarded": xp})
