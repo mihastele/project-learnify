@@ -39,3 +39,5 @@ build/
 coverage/
 htmlcov/
 .tox/
+
+node_modules/
