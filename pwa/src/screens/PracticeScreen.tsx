@@ -1,12 +1,10 @@
 import {useEffect, useState, useCallback} from 'react';
-
 import ItemRenderer from '../components/ItemRenderer';
-import {
-  getNextItemsForSession,
-} from '../services/scheduleService';
+import {getNextItemsForSession} from '../services/scheduleService';
 import {computeItemState} from '../services/srs';
 import {saveAttempt, upsertItemState, ensureLearner} from '../db/database';
-import {Item, Attempt, ItemState} from '../api/types';
+import {Item, Attempt, ItemState, LearnerStats} from '../api/types';
+import {recordPractice} from '../api/client';
 import styles from './PracticeScreen.module.css';
 
 function uuid(): string {
@@ -19,7 +17,9 @@ function uuid(): string {
 
 interface Props {
   learnerId: string;
-  onDone: () => void;
+  lessonId?: string;
+  onDone: (sessionStats: {correct: number; incorrect: number; partial: number; xpEarned: number}) => void;
+  onCancel: () => void;
 }
 
 type Phase = 'loading' | 'practicing' | 'complete';
@@ -28,26 +28,27 @@ interface SessionStats {
   correct: number;
   incorrect: number;
   partial: number;
+  xpEarned: number;
 }
 
-export default function PracticeScreen({learnerId, onDone}: Props) {
+export default function PracticeScreen({learnerId, lessonId, onDone, onCancel}: Props) {
   const [phase, setPhase] = useState<Phase>('loading');
   const [items, setItems] = useState<Item[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [stats, setStats] = useState<SessionStats>({correct: 0, incorrect: 0, partial: 0});
+  const [stats, setStats] = useState<SessionStats>({correct: 0, incorrect: 0, partial: 0, xpEarned: 0});
   const [startTime] = useState(() => Date.now());
 
   useEffect(() => {
     ensureLearner(learnerId).then(() =>
-      getNextItemsForSession(learnerId).then(it => {
+      getNextItemsForSession(learnerId, lessonId).then(it => {
         setItems(it);
         setPhase(it.length === 0 ? 'complete' : 'practicing');
       }),
     );
-  }, [learnerId]);
+  }, [learnerId, lessonId]);
 
   const handleAnswer = useCallback(
-    (correct: boolean, response: Record<string, unknown>) => {
+    async (correct: boolean, response: Record<string, unknown>) => {
       if (currentIndex >= items.length) return;
 
       const item = items[currentIndex];
@@ -88,11 +89,21 @@ export default function PracticeScreen({learnerId, onDone}: Props) {
       };
       upsertItemState(newState);
 
+      const xpGain = item.points || (correct ? 10 : 5);
+
       setStats(s => ({
         correct: s.correct + (result === 'CORRECT' ? 1 : 0),
         incorrect: s.incorrect + ((result as string) === 'INCORRECT' ? 1 : 0),
         partial: s.partial + (result === 'PARTIAL' ? 1 : 0),
+        xpEarned: s.xpEarned + xpGain,
       }));
+
+      // Sync gamification in background
+      try {
+        await recordPractice(learnerId, result, xpGain, 1, Math.floor(latencyMs / 1000));
+      } catch {
+        // offline, will sync later
+      }
 
       const next = currentIndex + 1;
       if (next >= items.length) {
@@ -107,8 +118,9 @@ export default function PracticeScreen({learnerId, onDone}: Props) {
   if (phase === 'loading') {
     return (
       <div className={styles.center}>
-        <div className={styles.spinner} />
+        <div className="spinner" />
         <span className={styles.loadingText}>Loading items...</span>
+        <button className={styles.cancelBtn} onClick={onCancel}>Cancel</button>
       </div>
     );
   }
@@ -116,18 +128,24 @@ export default function PracticeScreen({learnerId, onDone}: Props) {
   if (phase === 'complete') {
     return (
       <div className={styles.center}>
-        <h2 className={styles.doneTitle}>Session Complete!</h2>
-        <div className={styles.statsRow}>
-          <span className={styles.stat}>
-            Correct: {stats.correct}
-          </span>
-          <span className={styles.stat}>
-            Needed work: {stats.partial + stats.incorrect}
-          </span>
+        <div className={styles.doneCard}>
+          <span className={styles.doneIcon}>🎉</span>
+          <h2 className={styles.doneTitle}>Session Complete!</h2>
+          <div className={styles.doneXp}>+{stats.xpEarned} XP</div>
+          <div className={styles.statsRow}>
+            <div className={styles.statBlock}>
+              <span className={styles.statNum}>{stats.correct}</span>
+              <span className={styles.statLabel}>Correct</span>
+            </div>
+            <div className={styles.statBlock}>
+              <span className={styles.statNum}>{stats.partial + stats.incorrect}</span>
+              <span className={styles.statLabel}>Needs Work</span>
+            </div>
+          </div>
+          <button className={styles.doneBtn} onClick={() => onDone(stats)}>
+            Continue Learning
+          </button>
         </div>
-        <button className={styles.doneBtn} onClick={onDone}>
-          Back to Sync
-        </button>
       </div>
     );
   }
@@ -135,18 +153,23 @@ export default function PracticeScreen({learnerId, onDone}: Props) {
   const current = items[currentIndex];
   return (
     <div className={styles.container}>
-      <div className={styles.progressBar}>
-        <span className={styles.progressText}>
-          {currentIndex + 1} / {items.length}
-        </span>
-        <div className={styles.barTrack}>
-          <div
-            className={styles.barFill}
-            style={{width: `${((currentIndex + 1) / items.length) * 100}%`}}
-          />
+      <div className={styles.topBar}>
+        <button className={styles.cancelBtn} onClick={onCancel}>✕</button>
+        <div className={styles.progressBar}>
+          <div className={styles.progressTrack}>
+            <div
+              className={styles.progressFill}
+              style={{width: `${((currentIndex + 1) / items.length) * 100}%`}}
+            />
+          </div>
+          <span className={styles.progressText}>
+            {currentIndex + 1} / {items.length}
+          </span>
         </div>
       </div>
-      <ItemRenderer item={current} onAnswer={handleAnswer} />
+      <div className={styles.itemContainer}>
+        <ItemRenderer item={current} onAnswer={handleAnswer} />
+      </div>
     </div>
   );
 }

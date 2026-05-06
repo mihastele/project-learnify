@@ -1,0 +1,92 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeIn 0.3s ease;
+}
+
+.prompt {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--clr-text);
+  margin: 0;
+}
+
+.rubric {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--clr-primary-bg);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--clr-text-secondary);
+}
+
+.rubricLabel { font-weight: 600; color: var(--clr-primary-dark); flex-shrink: 0; }
+
+.hint {
+  padding: 8px 14px;
+  background: var(--clr-accent-bg);
+  border: 1px solid var(--clr-accent-light);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--clr-text-secondary);
+}
+
+.textarea {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  resize: vertical;
+  background: var(--clr-surface);
+  color: var(--clr-text);
+  outline: none;
+  font-family: inherit;
+  line-height: 1.6;
+  min-height: 140px;
+}
+
+.textarea:focus { border-color: var(--clr-primary); }
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wordCount {
+  font-size: var(--text-sm);
+  color: var(--clr-text-muted);
+}
+
+.invalid { color: var(--clr-error); font-weight: 600; }
+
+.submitBtn {
+  padding: 10px 20px;
+  background: var(--clr-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submitBtn:disabled { background: var(--clr-border); cursor: not-allowed; }
+
+.responseCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--clr-success-bg);
+  border: 1px solid var(--clr-success-light);
+  border-radius: var(--radius-md);
+  animation: scaleIn 0.3s ease;
+}
+
+.responseLabel { font-weight: 600; font-size: var(--text-sm); }
+.responseText { margin: 0; font-size: var(--text-sm); line-height: 1.6; color: var(--clr-text); }
+.responseWords { font-size: var(--text-xs); color: var(--clr-text-muted); }

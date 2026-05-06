@@ -1,0 +1,110 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeIn 0.3s ease;
+}
+
+.prompt {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--clr-text);
+  margin: 0;
+}
+
+.imageContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: var(--clr-bg);
+  border: 2px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.pinNumber {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--clr-primary);
+  color: white;
+  border-radius: 50%;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  border: 2px solid white;
+  box-shadow: var(--shadow-sm);
+}
+
+.inputsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.inputGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: var(--clr-surface);
+  border: 2px solid var(--clr-border);
+  transition: border-color var(--transition-fast);
+}
+
+.correct { border-color: var(--clr-success); background: var(--clr-success-bg); }
+.incorrect { border-color: var(--clr-error); background: var(--clr-error-bg); }
+
+.labelNum {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--clr-text-secondary);
+  flex-shrink: 0;
+}
+
+.input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  background: var(--clr-surface);
+  color: var(--clr-text);
+  outline: none;
+}
+
+.input:focus { border-color: var(--clr-primary); }
+
+.correctLabel {
+  font-size: var(--text-xs);
+  color: var(--clr-success);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.submitBtn {
+  padding: 12px 24px;
+  background: var(--clr-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+}
+
+.submitBtn:disabled { background: var(--clr-border); cursor: not-allowed; }

@@ -1,5 +1,9 @@
+import uuid
+from datetime import date
+
 from content.models import Item
 from django.utils import timezone
+from gamification.models import Badge, DailyActivity, LearnerBadge, LearnerStats
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -8,8 +12,11 @@ from .models import Attempt, ItemState, Learner
 from .serializers import AttemptSerializer, ItemStateSerializer, LearnerSerializer
 from .srs import update_item_state
 
-# Items due for review or new — cap per request to keep responses small.
 DEFAULT_NEXT_ITEMS_LIMIT = 20
+
+XP_PER_CORRECT = 10
+XP_PER_PARTIAL = 5
+XP_PER_INCORRECT = 2
 
 
 class LearnerViewSet(viewsets.ModelViewSet):
@@ -18,17 +25,13 @@ class LearnerViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"])
     def next_items(self, request, pk=None):
-        """Return items ordered by due date, then predicted weakness.
-
-        Due items come first (next_due <= now), then items the learner hasn't
-        seen yet (no ItemState row).  Within each group items are ordered by
-        ease_factor ascending (lower = harder).
-        """
         learner = self.get_object()
         now = timezone.now()
         limit = int(request.query_params.get("limit", DEFAULT_NEXT_ITEMS_LIMIT))
 
-        # Items the learner has seen: pick overdue ones first.
+        subject = request.query_params.get("subject")
+        item_type = request.query_params.get("item_type")
+
         states = ItemState.objects.filter(learner=learner).select_related("item")
         seen_item_ids = set(states.values_list("item_id", flat=True))
 
@@ -38,17 +41,18 @@ class LearnerViewSet(viewsets.ModelViewSet):
             .values_list("item_id", flat=True)[:limit]
         )
 
-        # Fill remaining slots with unseen items.
         slots_left = limit - len(due_ids)
         if slots_left > 0:
+            new_qs = Item.objects.exclude(id__in=seen_item_ids)
+            if subject:
+                new_qs = new_qs.filter(content_unit__subject=subject)
+            if item_type:
+                new_qs = new_qs.filter(item_type=item_type)
             new_ids = list(
-                Item.objects.exclude(id__in=seen_item_ids)
-                .order_by("?")[:slots_left]
-                .values_list("id", flat=True)
+                new_qs.order_by("?")[:slots_left].values_list("id", flat=True)
             )
             due_ids.extend(new_ids)
 
-        # If there aren't enough new items, add overdue-but-seen items.
         if len(due_ids) < limit:
             more_due = (
                 states.filter(item_id__in=seen_item_ids)
@@ -64,6 +68,16 @@ class LearnerViewSet(viewsets.ModelViewSet):
         serializer = ItemSerializer(items, many=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=["get"])
+    def stats(self, request, pk=None):
+        learner = self.get_object()
+        stats, _ = LearnerStats.objects.get_or_create(
+            learner=learner,
+            defaults={"id": uuid.uuid4()},
+        )
+        from gamification.serializers import LearnerStatsSerializer
+        return Response(LearnerStatsSerializer(stats).data)
+
 
 class AttemptViewSet(viewsets.ModelViewSet):
     queryset = Attempt.objects.select_related("learner", "item").all()
@@ -72,6 +86,7 @@ class AttemptViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         attempt = serializer.save()
         self._update_srs(attempt)
+        self._update_gamification(attempt)
 
     def _update_srs(self, attempt: Attempt) -> None:
         state, _ = ItemState.objects.get_or_create(
@@ -89,6 +104,71 @@ class AttemptViewSet(viewsets.ModelViewSet):
         for field, value in updated.items():
             setattr(state, field, value)
         state.save()
+
+    def _update_gamification(self, attempt: Attempt) -> None:
+        stats, _ = LearnerStats.objects.get_or_create(
+            learner_id=attempt.learner_id,
+            defaults={"id": uuid.uuid4()},
+        )
+
+        xp = 0
+        if attempt.result == "CORRECT":
+            xp = XP_PER_CORRECT
+            stats.total_correct += 1
+        elif attempt.result == "PARTIAL":
+            xp = XP_PER_PARTIAL
+            stats.total_partial += 1
+        else:
+            xp = XP_PER_INCORRECT
+            stats.total_incorrect += 1
+
+        stats.xp += xp
+        stats.level = max(1, (stats.xp // 100) + 1)
+
+        today = date.today()
+        if stats.daily_xp_date != today:
+            stats.daily_xp_earned = 0
+            stats.daily_xp_date = today
+        stats.daily_xp_earned += xp
+
+        from datetime import timedelta
+        if stats.last_practice_date:
+            if stats.last_practice_date == today:
+                pass
+            elif stats.last_practice_date == today - timedelta(days=1):
+                stats.current_streak += 1
+            else:
+                stats.current_streak = 1
+        else:
+            stats.current_streak = 1
+
+        stats.last_practice_date = today
+        stats.longest_streak = max(stats.longest_streak, stats.current_streak)
+        stats.total_sessions += 1
+        stats.save()
+
+        activity, _ = DailyActivity.objects.get_or_create(
+            learner_id=attempt.learner_id, date=today,
+            defaults={"id": uuid.uuid4()},
+        )
+        activity.xp_earned += xp
+        activity.items_completed += 1
+        activity.save()
+
+        self._check_badges(stats)
+
+    def _check_badges(self, stats):
+        badges = Badge.objects.filter(
+            required_xp__lte=stats.xp,
+            required_streak__lte=stats.current_streak,
+            required_correct_count__lte=stats.total_correct,
+        )
+        for badge in badges:
+            LearnerBadge.objects.get_or_create(
+                learner_id=stats.learner_id,
+                badge=badge,
+                defaults={"id": uuid.uuid4()},
+            )
 
 
 class ItemStateViewSet(viewsets.ReadOnlyModelViewSet):

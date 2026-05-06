@@ -29,12 +29,28 @@ ITEM_TYPE_CHOICES = [
     ("TRUE_FALSE", "True / False"),
     ("LISTEN_ANSWER", "Listen and Answer"),
     ("SPEAK_REPEAT", "Speak and Repeat"),
+    ("PRONUNCIATION", "Pronunciation Practice"),
+    ("MATH_INPUT", "Math Input"),
+    ("MATCHING", "Matching Pairs"),
+    ("SORTING", "Sorting / Ordering"),
+    ("DIAGRAM_LABEL", "Diagram Label"),
+    ("WRITING", "Writing / Open Response"),
+]
+
+SUBJECT_CHOICES = [
+    ("LANGUAGE", "Language"),
+    ("MATH", "Mathematics"),
+    ("SCIENCE", "Science"),
+    ("HISTORY", "History"),
+    ("GEOGRAPHY", "Geography"),
+    ("ART", "Art"),
+    ("MUSIC", "Music"),
+    ("CODING", "Coding"),
+    ("OTHER", "Other"),
 ]
 
 
 class Tag(models.Model):
-    """A skill or topic label that can be attached to Items for filtering."""
-
     name = models.CharField(max_length=128, unique=True)
 
     class Meta:
@@ -45,12 +61,6 @@ class Tag(models.Model):
 
 
 class ContentUnit(models.Model):
-    """The top-level unit of OER content — one lesson, article, or resource.
-
-    A ContentUnit can have multiple ContentVariants (translations), MediaResources,
-    and Items (learning exercises).
-    """
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=512)
     description = models.TextField(blank=True, null=True)
@@ -75,8 +85,6 @@ class ContentUnit(models.Model):
 
 
 class ContentVariant(models.Model):
-    """A language-specific variant of a ContentUnit with the actual body text."""
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     content_unit = models.ForeignKey(
         ContentUnit, on_delete=models.CASCADE, related_name="variants"
@@ -101,8 +109,6 @@ class ContentVariant(models.Model):
 
 
 class MediaResource(models.Model):
-    """Audio, image, or video attached to a ContentUnit."""
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     content_unit = models.ForeignKey(
         ContentUnit, on_delete=models.CASCADE, related_name="media"
@@ -117,24 +123,21 @@ class MediaResource(models.Model):
 
 
 class Item(models.Model):
-    """A learning exercise attached to a ContentUnit.
-
-    ``metadata`` is a JSON field holding type-specific payload, e.g. for MCQ:
-    {"choices": ["a", "b", "c"], "correct_index": 0}.
-    """
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     content_unit = models.ForeignKey(
         ContentUnit, on_delete=models.CASCADE, related_name="items"
     )
     item_type = models.CharField(max_length=24, choices=ITEM_TYPE_CHOICES)
     prompt = models.TextField()
+    hint = models.TextField(blank=True, null=True)
     metadata = models.JSONField(default=dict, blank=True)
     difficulty_initial = models.FloatField(blank=True, null=True)
+    sort_order = models.IntegerField(default=0)
+    points = models.PositiveIntegerField(default=10)
     tags = models.ManyToManyField(Tag, blank=True, related_name="items")
 
     class Meta:
-        ordering = ["item_type"]
+        ordering = ["sort_order", "item_type"]
 
     def __str__(self) -> str:
         return f"[{self.get_item_type_display()}] {self.prompt[:80]}"

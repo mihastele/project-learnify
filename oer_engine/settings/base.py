@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "learning",
     "sync",
     "teacher",
+    "gamification",
 ]
 
 MIDDLEWARE = [

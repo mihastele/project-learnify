@@ -1,0 +1,57 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.title {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--clr-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
+
+.badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 8px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--clr-border-light);
+  background: var(--clr-surface);
+  text-align: center;
+  transition: all var(--transition-normal);
+}
+
+.earned { border-color: var(--clr-accent-light); background: var(--clr-accent-bg); }
+.locked { opacity: 0.4; filter: grayscale(0.5); }
+
+.icon { font-size: 32px; }
+
+.name {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--clr-text);
+}
+
+.req {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 10px;
+  color: var(--clr-text-muted);
+}
+
+.earnedDate {
+  font-size: 10px;
+  color: var(--clr-text-muted);
+}

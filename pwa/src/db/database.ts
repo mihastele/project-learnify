@@ -211,8 +211,11 @@ export async function getAllItems(): Promise<Item[]> {
     content_unit: r.content_unit_id ?? r.content_unit,
     item_type: r.item_type,
     prompt: r.prompt,
+    hint: r.hint ?? null,
     metadata: typeof r.metadata === 'string' ? JSON.parse(r.metadata) : r.metadata,
     difficulty_initial: r.difficulty_initial,
+    sort_order: r.sort_order ?? 0,
+    points: r.points ?? 10,
     tags: [],
   }));
 }

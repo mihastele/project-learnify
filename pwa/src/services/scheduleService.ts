@@ -10,21 +10,31 @@ const DEFAULT_LIMIT = 20;
  *   1. Overdue items (next_due <= now) ordered by ease_factor ascending.
  *   2. Unseen items (no ItemState row yet) — random sample.
  *   3. Remaining known items ordered by next_due.
+ *
+ * If lessonId is provided, limits to items from that ContentUnit.
  */
 export async function getNextItemsForSession(
   learnerId: string,
+  lessonId?: string,
   limit: number = DEFAULT_LIMIT,
 ): Promise<Item[]> {
   const now = new Date().toISOString();
   const states = await getItemStates(learnerId);
+  const allItems = await getAllItems();
 
+  // If lessonId provided, filter to that lesson's items
+  const eligibleItems = lessonId
+    ? allItems.filter(i => i.content_unit === lessonId)
+    : allItems;
+
+  const eligibleIds = new Set(eligibleItems.map(i => i.id));
   const seenItemIds = new Set(states.map(s => s.item));
 
   const pickedIds: string[] = [];
 
   // Overdue items first (sorted by ease_factor ascending).
   const orderedStates = states
-    .filter(s => s.next_due <= now)
+    .filter(s => s.next_due <= now && eligibleIds.has(s.item))
     .sort((a, b) => a.ease_factor - b.ease_factor);
   for (const s of orderedStates) {
     if (pickedIds.length >= limit) break;
@@ -33,8 +43,7 @@ export async function getNextItemsForSession(
 
   // Fill remaining slots with unseen items.
   if (pickedIds.length < limit) {
-    const allItems = await getAllItems();
-    const unseen = allItems.filter(i => !seenItemIds.has(i.id));
+    const unseen = eligibleItems.filter(i => !seenItemIds.has(i.id));
     shuffle(unseen);
     for (const item of unseen) {
       if (pickedIds.length >= limit) break;
@@ -45,7 +54,7 @@ export async function getNextItemsForSession(
   // If still not enough, add future-due items (closest due first).
   if (pickedIds.length < limit) {
     const remaining = states
-      .filter(s => s.next_due > now && !pickedIds.includes(s.item))
+      .filter(s => s.next_due > now && eligibleIds.has(s.item) && !pickedIds.includes(s.item))
       .sort((a, b) => a.next_due.localeCompare(b.next_due));
     for (const s of remaining) {
       if (pickedIds.length >= limit) break;
@@ -53,9 +62,8 @@ export async function getNextItemsForSession(
     }
   }
 
-  const allItems = await getAllItems();
   const idSet = new Set(pickedIds);
-  return allItems.filter(i => idSet.has(i.id));
+  return eligibleItems.filter(i => idSet.has(i.id));
 }
 
 function shuffle<T>(arr: T[]): void {

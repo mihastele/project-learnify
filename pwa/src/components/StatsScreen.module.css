@@ -1,0 +1,203 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 16px;
+  animation: fadeIn 0.3s ease;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--clr-text);
+  margin: 0;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--clr-text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.closeBtn:hover { background: var(--clr-bg); }
+
+.levelCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, var(--clr-primary), var(--clr-primary-dark));
+  color: white;
+  padding: 20px;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+.levelCircle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.levelNum {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+}
+
+.levelInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.levelLabel {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.xpTrack {
+  width: 100%;
+  height: 8px;
+  background: rgba(255,255,255,0.2);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.xpFill {
+  height: 100%;
+  background: white;
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+}
+
+.xpText {
+  font-size: var(--text-xs);
+  opacity: 0.8;
+}
+
+.section { display: flex; flex-direction: column; gap: 10px; }
+
+.sectionTitle {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--clr-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.goalCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border-light);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+}
+
+.goalIcon { font-size: 24px; }
+
+.goalInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.goalTrack {
+  width: 100%;
+  height: 8px;
+  background: var(--clr-border-light);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.goalFill {
+  height: 100%;
+  background: var(--clr-accent);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+}
+
+.goalText {
+  font-size: var(--text-xs);
+  color: var(--clr-text-muted);
+}
+
+.streakRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.streakCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border-light);
+  border-radius: var(--radius-lg);
+  padding: 14px 8px;
+}
+
+.streakIcon { font-size: 24px; }
+
+.streakNum {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--clr-text);
+}
+
+.streakLabel {
+  font-size: var(--text-xs);
+  color: var(--clr-text-muted);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border-light);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+}
+
+.statValue {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--clr-primary);
+}
+
+.statLabel {
+  font-size: var(--text-xs);
+  color: var(--clr-text-muted);
+}
