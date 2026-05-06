@@ -10,6 +10,7 @@ import Leaderboard from './components/Leaderboard';
 import TeacherDashboard from './components/TeacherDashboard';
 import SyncScreen from './screens/SyncScreen';
 import AuthScreen from './components/AuthScreen';
+import AdminDashboard from './components/AdminDashboard';
 
 import {ContentUnit, GamificationSummary, LeaderboardEntry} from './api/types';
 import {fetchGamificationSummary, fetchLeaderboard, fetchBadges} from './api/client';
@@ -17,7 +18,7 @@ import styles from './App.module.css';
 
 const ANON_LEARNER_ID = '00000000-0000-0000-0000-000000000001';
 
-type Tab = 'classroom' | 'stats' | 'leaderboard' | 'teacher' | 'sync' | 'login' | 'profile';
+type Tab = 'classroom' | 'stats' | 'leaderboard' | 'teacher' | 'sync' | 'login' | 'profile' | 'admin';
 
 export default function App() {
   const [dbReady, setDbReady] = useState(false);
@@ -30,6 +31,7 @@ export default function App() {
   const [learnerId, setLearnerId] = useState<string>(ANON_LEARNER_ID);
   const [isTeacherApproved, setIsTeacherApproved] = useState(false);
   const [proposalStatus, setProposalStatus] = useState('NONE');
+  const [isStaff, setIsStaff] = useState(false);
 
   // Gamification state
   const [gamification, setGamification] = useState<GamificationSummary | null>(null);
@@ -74,11 +76,12 @@ export default function App() {
     setPracticing(false);
   };
 
-  const handleAuthSuccess = (token: string, newLearnerId: string, approved: boolean, status: string) => {
+  const handleAuthSuccess = (token: string, newLearnerId: string, approved: boolean, status: string, staff: boolean = false) => {
     setAuthToken(token);
     setLearnerId(newLearnerId);
     setIsTeacherApproved(approved);
     setProposalStatus(status);
+    setIsStaff(staff);
     if (approved) {
       setTab('teacher');
     } else {
@@ -228,6 +231,10 @@ export default function App() {
           <TeacherDashboard />
         )}
 
+        {tab === 'admin' && authToken && isStaff && (
+          <AdminDashboard authToken={authToken} />
+        )}
+
         {tab === 'sync' && <SyncScreen learnerId={learnerId} />}
       </main>
 
@@ -287,6 +294,15 @@ export default function App() {
           <span className={styles.tabIcon}>🔄</span>
           <span className={styles.tabLabel}>Sync</span>
         </button>
+        {authToken && isStaff && (
+          <button
+            className={`${styles.tab} ${tab === 'admin' ? styles.tabActive : ''}`}
+            onClick={() => setTab('admin')}
+          >
+            <span className={styles.tabIcon}>🛡️</span>
+            <span className={styles.tabLabel}>Admin</span>
+          </button>
+        )}
       </nav>
     </div>
   );

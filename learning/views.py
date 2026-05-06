@@ -11,9 +11,10 @@ from rest_framework.response import Response
 from .models import Attempt, ItemState, Learner
 from .serializers import AttemptSerializer, ItemStateSerializer, LearnerSerializer
 from .srs import update_item_state
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
+from rest_framework.permissions import IsAdminUser
 
 DEFAULT_NEXT_ITEMS_LIMIT = 20
 
@@ -107,7 +108,8 @@ class AuthViewSet(viewsets.ViewSet):
             'learner_id': learner.id,
             'username': user.username,
             'is_teacher_approved': learner.is_teacher_approved,
-            'teacher_proposal_status': learner.teacher_proposal_status
+            'teacher_proposal_status': learner.teacher_proposal_status,
+            'is_staff': user.is_staff
         })
 
     @action(detail=False, methods=['post'])
@@ -123,7 +125,8 @@ class AuthViewSet(viewsets.ViewSet):
                 'learner_id': learner.id,
                 'username': user.username,
                 'is_teacher_approved': learner.is_teacher_approved,
-                'teacher_proposal_status': learner.teacher_proposal_status
+                'teacher_proposal_status': learner.teacher_proposal_status,
+                'is_staff': user.is_staff
             })
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -225,3 +228,37 @@ class ItemStateViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ItemState.objects.select_related("learner", "item").all()
     serializer_class = ItemStateSerializer
     filterset_fields = ["learner", "item"]
+
+from .serializers import AdminLearnerSerializer
+
+class AdminLearnerViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAdminUser]
+    queryset = Learner.objects.select_related("user").prefetch_related("user__groups").all()
+    serializer_class = AdminLearnerSerializer
+
+    @action(detail=True, methods=["post"])
+    def approve_teacher(self, request, pk=None):
+        learner = self.get_object()
+        action_type = request.data.get("action")
+        if action_type == "accept":
+            learner.is_teacher_approved = True
+            learner.teacher_proposal_status = "APPROVED"
+        elif action_type == "decline":
+            learner.is_teacher_approved = False
+            learner.teacher_proposal_status = "REJECTED"
+        learner.save()
+        return Response({"status": "Success", "teacher_proposal_status": learner.teacher_proposal_status})
+
+    @action(detail=True, methods=["patch"])
+    def groups(self, request, pk=None):
+        learner = self.get_object()
+        group_ids = request.data.get("groups", [])
+        if learner.user:
+            learner.user.groups.set(group_ids)
+            learner.user.save()
+        return Response({"status": "Groups updated"})
+
+    @action(detail=False, methods=["get"])
+    def all_groups(self, request):
+        groups = Group.objects.all().values("id", "name")
+        return Response(groups)

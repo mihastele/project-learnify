@@ -1,5 +1,5 @@
 from rest_framework import serializers
-
+from django.contrib.auth.models import User, Group
 from .models import Attempt, ItemState, Learner
 
 
@@ -38,3 +38,21 @@ class ItemStateSerializer(serializers.ModelSerializer):
             "next_due",
         ]
         read_only_fields = ["id"]
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ['id', 'name']
+
+class UserSerializer(serializers.ModelSerializer):
+    groups = GroupSerializer(many=True, read_only=True)
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'groups']
+
+class AdminLearnerSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    
+    class Meta:
+        model = Learner
+        fields = ['id', 'user', 'is_teacher_approved', 'teacher_proposal_status', 'created_at']
