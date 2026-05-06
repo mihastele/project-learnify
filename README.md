@@ -1,6 +1,6 @@
 # Learnify — OER Adaptive Learning Engine
 
-Offline-first adaptive learning platform for low-end Android devices, built with Django, React Native, and a transparent SM-2 spaced-repetition algorithm.
+Offline-first adaptive learning platform for Android and web, built with Django, React Native (mobile), React + Vite (PWA), and a transparent SM-2 spaced-repetition algorithm.
 
 ## Architecture
 
@@ -8,15 +8,28 @@ Offline-first adaptive learning platform for low-end Android devices, built with
 teacher ──→ backend ──sync──→ device ──→ learner
    │          │                      │
    │          ▼                      ▼
-   │     PostgreSQL              SQLite
-   │     (Django REST)           (React Native)
+   │     PostgreSQL              SQLite / IndexedDB
+   │     (Django REST)           (React Native / PWA)
    │
    └── upload content + author items
 ```
 
 - **Backend:** Django REST Framework (`content`, `learning`, `sync`, `teacher` apps)
-- **Mobile:** React Native with TypeScript, local SQLite, offline-first sync
-- **Scheduling:** Pure-function SM-2 variant in `learning/srs.py`
+- **Mobile:** React Native with TypeScript, local SQLite, offline-first sync (native-only, `mobile/`)
+- **PWA:** React + TypeScript + Vite, IndexedDB, offline-first, installable to home screen (`pwa/`)
+- **Scheduling:** Pure-function SM-2 variant in `learning/srs.py` (also mirrored in client `services/srs.ts`)
+
+## Running the PWA
+
+```bash
+cd pwa
+npm install
+npm run dev          # dev server at http://localhost:5173
+npm run build        # production build
+npm run preview      # preview production build
+```
+
+The PWA uses the same Django backend API. Set the backend URL in `pwa/src/api/config.ts`. By default it points to `http://localhost:8000/api`.
 
 ## Data flow
 
@@ -46,6 +59,8 @@ Dev mode uses SQLite. For production, set `DJANGO_SETTINGS_MODULE=oer_engine.set
 | `learning` | Learners, attempts, item states, SRS algorithm |
 | `sync` | Incremental content pull and progress push |
 | `teacher` | Teacher-facing content authoring |
+| `mobile/` | React Native app (Android/iOS) |
+| `pwa/` | PWA web app (React + Vite, IndexedDB) |
 
 ## Testing
 
@@ -54,6 +69,13 @@ python -m pytest learning/tests/
 ```
 
 The SRS algorithm in `learning/srs.py` is a pure function with no framework dependencies — testable in isolation and portable to the React Native client.
+
+## Notes
+
+- The **mobile** app (`mobile/`) is React Native native-only — it uses `react-native-sqlite-storage` (native SQLite) and Metro bundler.
+- The **PWA** app (`pwa/`) is the web/browser version. It uses IndexedDB (via `idb`) for local storage and `vite-plugin-pwa` for offline support and home screen installation. It can run alongside the same Django backend.
+- The mobile API base URL is in `mobile/src/api/config.ts`; the PWA API base URL is in `pwa/src/api/config.ts`.
+- The default mobile URL (`10.0.2.2:8000`) targets the host machine from an Android emulator — change for physical devices or iOS.
 
 ## Extensibility
 

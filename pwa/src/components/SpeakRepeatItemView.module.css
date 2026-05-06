@@ -1,0 +1,35 @@
+.container { padding: 16px; }
+.prompt { font-size: 18px; margin-bottom: 20px; line-height: 1.5; }
+
+.recordBtn {
+  background-color: #db2777;
+  padding: 18px;
+  border-radius: 8px;
+  border: none;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  margin-bottom: 20px;
+  font-family: inherit;
+}
+.recordBtnActive { background-color: #a0aec0; cursor: default; }
+
+.assessment { margin-top: 10px; }
+.assessLabel { font-size: 16px; margin-bottom: 12px; text-align: center; display: block; }
+
+.row { display: flex; gap: 12px; }
+
+.assessBtn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.assessCorrect { background-color: #c8f7c5; }
+.assessIncorrect { background-color: #f7c5c5; }

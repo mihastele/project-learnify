@@ -1,0 +1,23 @@
+.container { padding: 16px; }
+.prompt { font-size: 18px; margin-bottom: 20px; line-height: 1.5; }
+
+.row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.btn {
+  flex: 1;
+  padding: 18px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 18px;
+  font-weight: 600;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn:disabled { cursor: default; }
+.btnCorrect { background-color: #c8f7c5; border-color: #16a34a; }
+.btnIncorrect { background-color: #f7c5c5; border-color: #dc2626; }

@@ -1,0 +1,54 @@
+.container { }
+
+.center {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 32px;
+  min-height: 100%;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loadingText { margin-top: 12px; font-size: 16px; color: #555; }
+
+.doneTitle { font-size: 24px; font-weight: 700; margin: 0 0 16px; }
+
+.statsRow { display: flex; gap: 20px; margin-bottom: 24px; }
+.stat { font-size: 16px; color: #334155; }
+
+.doneBtn {
+  background-color: #2563eb;
+  padding: 14px 32px;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.progressBar { padding: 0 16px 0; padding-top: 12px; }
+.progressText { font-size: 13px; color: #64748b; display: block; margin-bottom: 6px; }
+
+.barTrack {
+  height: 4px;
+  background-color: #e2e8f0;
+  border-radius: 2px;
+}
+.barFill {
+  height: 4px;
+  background-color: #2563eb;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}

@@ -1,0 +1,47 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: #fff;
+}
+
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.splash {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: #2563eb;
+}
+
+.splashTitle { font-size: 32px; font-weight: 800; color: #fff; margin: 0; }
+.splashSub { font-size: 16px; color: #bfdbfe; margin-top: 8px; }
+
+.tabBar {
+  display: flex;
+  border-top: 1px solid #e2e8f0;
+  padding: 8px 0;
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+  background: #fff;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  font-size: 15px;
+  color: #94a3b8;
+  padding: 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.tabActive { color: #2563eb; font-weight: 600; }

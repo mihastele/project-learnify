@@ -1,0 +1,33 @@
+.container { padding: 16px; }
+.prompt { font-size: 18px; margin-bottom: 20px; line-height: 1.5; }
+.choices { display: flex; flex-direction: column; gap: 10px; }
+
+.choice {
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  text-align: left;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  font-family: inherit;
+}
+.choice:disabled { cursor: default; }
+.choiceSelected { background-color: #d0e8ff; border-color: #2563eb; }
+.choiceCorrect { background-color: #c8f7c5; border-color: #16a34a; }
+.choiceIncorrect { background-color: #f7c5c5; border-color: #dc2626; }
+
+.submitBtn {
+  margin-top: 20px;
+  background-color: #2563eb;
+  padding: 14px;
+  border-radius: 8px;
+  border: none;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+}
+.submitBtnDisabled { background-color: #a0aec0; cursor: default; }
