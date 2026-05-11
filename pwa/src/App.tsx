@@ -13,7 +13,7 @@ import AuthScreen from './components/AuthScreen';
 import AdminDashboard from './components/AdminDashboard';
 
 import {ContentUnit, GamificationSummary, LeaderboardEntry} from './api/types';
-import {fetchGamificationSummary, fetchLeaderboard, fetchBadges} from './api/client';
+import {fetchGamificationSummary, fetchLeaderboard, fetchBadges, setApiToken} from './api/client';
 import styles from './App.module.css';
 
 const ANON_LEARNER_ID = '00000000-0000-0000-0000-000000000001';
@@ -78,6 +78,7 @@ export default function App() {
 
   const handleAuthSuccess = (token: string, newLearnerId: string, approved: boolean, status: string, staff: boolean = false) => {
     setAuthToken(token);
+    setApiToken(token);
     setLearnerId(newLearnerId);
     setIsTeacherApproved(approved);
     setProposalStatus(status);

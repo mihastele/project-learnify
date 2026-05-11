@@ -13,10 +13,19 @@ import {
   ProgressSyncResponse,
 } from './types';
 
+let currentToken: string | null = null;
+export function setApiToken(token: string | null) {
+  currentToken = token;
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE}${path}`;
+  const headers: Record<string, string> = {'Content-Type': 'application/json'};
+  if (currentToken) {
+    headers['Authorization'] = `Token ${currentToken}`;
+  }
   const res = await fetch(url, {
-    headers: {'Content-Type': 'application/json'},
+    headers,
     ...options,
   });
   if (!res.ok) {
