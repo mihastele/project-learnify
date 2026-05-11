@@ -104,8 +104,20 @@ class CanvasGame(models.Model):
     tools_config = models.JSONField(
         default=dict, help_text="JSON configuration for reusable tools like boxes, buttons, etc."
     )
+    game_code = models.TextField(
+        blank=True, null=True, help_text="JavaScript/TypeScript code for the game logic"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["created_by", "name"],
+                name="unique_teacher_game_name",
+                violation_error_message="A game with this name already exists for this teacher."
+            )
+        ]
+
     def __str__(self) -> str:
-        return self.name
+        return f"{self.created_by.username}/{self.name}"

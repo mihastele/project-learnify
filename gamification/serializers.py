@@ -4,10 +4,15 @@ from .models import Badge, DailyActivity, LearnerBadge, LearnerStats, CanvasGame
 
 
 class CanvasGameSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
     class Meta:
         model = CanvasGame
-        fields = ["id", "name", "description", "created_by", "tools_config", "created_at", "updated_at"]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        fields = ["id", "name", "full_name", "description", "created_by", "tools_config", "game_code", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at", "full_name"]
+
+    def get_full_name(self, obj):
+        return f"{obj.created_by.username}/{obj.name}"
 
 
 class BadgeSerializer(serializers.ModelSerializer):

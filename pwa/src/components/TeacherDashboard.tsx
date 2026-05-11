@@ -1,8 +1,9 @@
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import {
   ItemType, LicenseType, LessonCreatePayload, LessonItemPayload, LessonMediaPayload,
 } from '../api/types';
-import {createLesson} from '../api/client';
+import {createLesson, updateLesson} from '../api/client';
+import CanvasGameEditor from './CanvasGameEditor';
 import styles from './TeacherDashboard.module.css';
 
 const ITEM_TYPE_OPTIONS: {value: ItemType; label: string}[] = [
@@ -92,6 +93,10 @@ export default function TeacherDashboard() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+  const [showGameEditor, setShowGameEditor] = useState(false);
+  const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
+  const [lessonId, setLessonId] = useState<string | null>(null);
+  const [autoSaving, setAutoSaving] = useState(false);
 
   const addItem = () => setItems(prev => [...prev, emptyItemForm()]);
 
@@ -100,6 +105,30 @@ export default function TeacherDashboard() {
   const updateItem = (idx: number, data: Partial<ItemFormData>) => {
     setItems(prev => prev.map((item, i) => (i === idx ? {...item, ...data} : item)));
   };
+
+  // Auto-save functionality
+  useEffect(() => {
+    const autoSaveTimer = setTimeout(async () => {
+      if (lessonId && (title || body || items.length > 0) && !saved && !saving) {
+        setAutoSaving(true);
+        try {
+          const payload: Partial<LessonCreatePayload> = {
+            title, description, subject, level, license_type: license,
+            language_code: language, body,
+            items: items.map(buildItemPayload),
+            media: mediaList,
+          };
+          await updateLesson(lessonId, payload);
+        } catch (e: any) {
+          console.error('Auto-save failed:', e);
+        } finally {
+          setAutoSaving(false);
+        }
+      }
+    }, 2000); // Auto-save after 2 seconds of inactivity
+
+    return () => clearTimeout(autoSaveTimer);
+  }, [title, description, subject, level, license, language, body, items, mediaList, lessonId, saved, saving]);
 
   const addMedia = () => {
     if (!mediaUrl.trim()) return;
@@ -184,7 +213,13 @@ export default function TeacherDashboard() {
         items: items.map(buildItemPayload),
         media: mediaList,
       };
-      await createLesson(payload);
+      
+      if (lessonId) {
+        await updateLesson(lessonId, payload);
+      } else {
+        const result = await createLesson(payload);
+        setLessonId(result.id);
+      }
       setSaved(true);
     } catch (e: any) {
       setError(e.message || 'Failed to save lesson');
@@ -192,6 +227,25 @@ export default function TeacherDashboard() {
       setSaving(false);
     }
   };
+
+  if (showGameEditor) {
+    return (
+      <CanvasGameEditor
+        gameId={undefined}
+        onSave={(game) => {
+          if (editingItemIndex !== null) {
+            updateItem(editingItemIndex, { game_slug: game.name });
+          }
+          setShowGameEditor(false);
+          setEditingItemIndex(null);
+        }}
+        onCancel={() => {
+          setShowGameEditor(false);
+          setEditingItemIndex(null);
+        }}
+      />
+    );
+  }
 
   if (saved) {
     return (
@@ -213,7 +267,10 @@ export default function TeacherDashboard() {
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.pageTitle}>Create Lesson</h2>
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+        <h2 className={styles.pageTitle}>{lessonId ? 'Edit Lesson' : 'Create Lesson'}</h2>
+        {autoSaving && <span style={{color: '#4488ff', fontSize: '14px'}}>Auto-saving...</span>}
+      </div>
 
       {error && <div className={styles.errorBox}>{error}</div>}
 
@@ -379,6 +436,16 @@ export default function TeacherDashboard() {
                     <input className={styles.inputSmall} type="number" value={item.game_enemy_count} onChange={e => updateItem(idx, {game_enemy_count: Number(e.target.value)})} min={1} max={20} />
                   </label>
                 </div>
+                <button 
+                  className={styles.btnSecondary} 
+                  onClick={() => {
+                    setEditingItemIndex(idx);
+                    setShowGameEditor(true);
+                  }}
+                  style={{ marginTop: '10px', width: '100%' }}
+                >
+                  🎮 Edit Games in Canvas
+                </button>
               </div>
             )}
           </div>
@@ -387,7 +454,7 @@ export default function TeacherDashboard() {
 
       {/* Submit */}
       <button className={styles.submitBtn} onClick={handleSubmit} disabled={saving}>
-        {saving ? 'Saving...' : 'Publish Lesson'}
+        {saving ? 'Saving...' : (lessonId ? 'Update Lesson' : 'Publish Lesson')}
       </button>
     </div>
   );

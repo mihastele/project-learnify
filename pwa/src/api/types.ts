@@ -318,3 +318,24 @@ export interface ProgressSyncResponse {
   item_states: Array<{id: string; status: string; errors?: unknown}>;
   server_sync_time: string;
 }
+
+// ── Canvas Games ──
+
+export interface CanvasGame {
+  id: string;
+  name: string;
+  full_name: string;
+  description: string | null;
+  created_by: string;
+  tools_config: Record<string, unknown>;
+  game_code: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CanvasGameCreatePayload {
+  name: string;
+  description?: string;
+  tools_config?: Record<string, unknown>;
+  game_code?: string;
+}

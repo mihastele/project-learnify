@@ -1,6 +1,8 @@
 import {API_BASE} from './config';
 import {
   Badge,
+  CanvasGame,
+  CanvasGameCreatePayload,
   ContentSyncRequest,
   ContentSyncResponse,
   ContentUnit,
@@ -164,4 +166,32 @@ export async function updateLesson(id: string, payload: Partial<LessonCreatePayl
 
 export async function deleteLesson(id: string): Promise<void> {
   await request(`/teacher/teacher/lesson/?id=${id}`, {method: 'DELETE'});
+}
+
+// ── Canvas Games ──
+
+export async function fetchMyCanvasGames(): Promise<CanvasGame[]> {
+  return request<CanvasGame[]>('/gamification/canvas-games/my_games/');
+}
+
+export async function createCanvasGame(payload: CanvasGameCreatePayload): Promise<CanvasGame> {
+  return request<CanvasGame>('/gamification/canvas-games/', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateCanvasGame(id: string, payload: Partial<CanvasGameCreatePayload>): Promise<CanvasGame> {
+  return request<CanvasGame>(`/gamification/canvas-games/${id}/`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteCanvasGame(id: string): Promise<void> {
+  await request(`/gamification/canvas-games/${id}/`, {method: 'DELETE'});
+}
+
+export async function fetchCanvasGame(id: string): Promise<CanvasGame> {
+  return request<CanvasGame>(`/gamification/canvas-games/${id}/`);
 }

@@ -191,8 +191,25 @@ class GamificationViewSet(viewsets.ViewSet):
 
 
 class CanvasGameViewSet(viewsets.ModelViewSet):
-    queryset = CanvasGame.objects.all()
     serializer_class = CanvasGameSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated:
+            return CanvasGame.objects.filter(created_by=user)
+        return CanvasGame.objects.none()
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+    @action(detail=False, methods=["get"])
+    def my_games(self, request):
+        user = request.user
+        if not user.is_authenticated:
+            return Response({"error": "Authentication required"}, status=401)
+        games = CanvasGame.objects.filter(created_by=user)
+        serializer = self.get_serializer(games, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=["post"])
     def feedback(self, request, pk=None):
