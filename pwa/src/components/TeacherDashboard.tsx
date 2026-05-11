@@ -17,6 +17,7 @@ const ITEM_TYPE_OPTIONS: {value: ItemType; label: string}[] = [
   {value: 'SORTING', label: 'Sort Order'},
   {value: 'DIAGRAM_LABEL', label: 'Label Diagram'},
   {value: 'WRITING', label: 'Writing'},
+  {value: 'ADVANCED_CANVAS_GAME', label: 'Canvas Game'},
 ];
 
 const SUBJECT_OPTIONS = [
@@ -43,6 +44,11 @@ interface ItemFormData {
   image_url: string;
   labels: string;
   min_words: number;
+  game_slug: string;
+  game_time_limit: number;
+  game_target_score: number;
+  game_max_lives: number;
+  game_enemy_count: number;
 }
 
 function emptyItemForm(): ItemFormData {
@@ -62,6 +68,11 @@ function emptyItemForm(): ItemFormData {
     image_url: '',
     labels: '',
     min_words: 5,
+    game_slug: 'collect_coins',
+    game_time_limit: 60,
+    game_target_score: 5,
+    game_max_lives: 3,
+    game_enemy_count: 3,
   };
 }
 
@@ -138,6 +149,17 @@ export default function TeacherDashboard() {
         break;
       case 'WRITING':
         metadata.min_words = item.min_words;
+        break;
+      case 'ADVANCED_CANVAS_GAME':
+        metadata.game_slug = item.game_slug;
+        metadata.game_config = {
+          time_limit: item.game_time_limit,
+          target_score: item.game_target_score,
+          max_lives: item.game_max_lives,
+          enemy_count: item.game_enemy_count,
+          success_condition: { type: 'score_threshold', score: item.game_target_score },
+          failure_condition: { type: 'lives_reached_zero' },
+        };
         break;
     }
     return {
@@ -328,6 +350,36 @@ export default function TeacherDashboard() {
 
             {item.item_type === 'WRITING' && (
               <input className={styles.input} type="number" placeholder="Min words" value={item.min_words} onChange={e => updateItem(idx, {min_words: Number(e.target.value)})} />
+            )}
+
+            {item.item_type === 'ADVANCED_CANVAS_GAME' && (
+              <div className={styles.canvasGameConfig}>
+                <select className={styles.select} value={item.game_slug} onChange={e => updateItem(idx, {game_slug: e.target.value})}>
+                  <option value="collect_coins">Collect the Coins</option>
+                  <option value="dodge_enemies">Dodge the Enemies</option>
+                  <option value="defend_castle">Defend the Castle</option>
+                </select>
+                <div className={styles.row3}>
+                  <label className={styles.fieldLabel}>
+                    Time (s):
+                    <input className={styles.inputSmall} type="number" value={item.game_time_limit} onChange={e => updateItem(idx, {game_time_limit: Number(e.target.value)})} min={10} max={300} />
+                  </label>
+                  <label className={styles.fieldLabel}>
+                    Target Score:
+                    <input className={styles.inputSmall} type="number" value={item.game_target_score} onChange={e => updateItem(idx, {game_target_score: Number(e.target.value)})} min={1} max={100} />
+                  </label>
+                  <label className={styles.fieldLabel}>
+                    Max Lives:
+                    <input className={styles.inputSmall} type="number" value={item.game_max_lives} onChange={e => updateItem(idx, {game_max_lives: Number(e.target.value)})} min={1} max={10} />
+                  </label>
+                </div>
+                <div className={styles.row3}>
+                  <label className={styles.fieldLabel}>
+                    Enemy Count:
+                    <input className={styles.inputSmall} type="number" value={item.game_enemy_count} onChange={e => updateItem(idx, {game_enemy_count: Number(e.target.value)})} min={1} max={20} />
+                  </label>
+                </div>
+              </div>
             )}
           </div>
         ))}

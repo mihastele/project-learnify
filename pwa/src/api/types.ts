@@ -9,7 +9,8 @@ export type MediaType = 'AUDIO' | 'IMAGE' | 'VIDEO' | 'OTHER';
 export type ItemType =
   | 'MCQ' | 'CLOZE' | 'TRUE_FALSE' | 'LISTEN_ANSWER'
   | 'SPEAK_REPEAT' | 'PRONUNCIATION' | 'MATH_INPUT'
-  | 'MATCHING' | 'SORTING' | 'DIAGRAM_LABEL' | 'WRITING';
+  | 'MATCHING' | 'SORTING' | 'DIAGRAM_LABEL' | 'WRITING'
+  | 'ADVANCED_CANVAS_GAME';
 
 export type SubjectType =
   | 'LANGUAGE' | 'MATH' | 'SCIENCE' | 'HISTORY'
@@ -110,7 +111,61 @@ export interface ItemMetadata {
   min_words?: number;
   max_words?: number;
   rubric?: string;
+  // ADVANCED_CANVAS_GAME
+  game_slug?: string;
+  game_config?: CanvasGameConfig;
   [key: string]: unknown;
+}
+
+export interface CanvasGameConfig {
+  time_limit?: number;
+  target_score?: number;
+  max_lives?: number;
+  speed?: number;
+  enemy_count?: number;
+  hero?: CanvasCharacter;
+  enemies?: CanvasCharacter[];
+  collectibles?: CanvasCharacter[];
+  obstacles?: CanvasCharacter[];
+  ui?: CanvasGameUI;
+  success_condition: {
+    type: 'score_threshold' | 'survive_for_seconds';
+    score?: number;
+    seconds?: number;
+  };
+  failure_condition: {
+    type: 'lives_reached_zero' | 'time_expired';
+  };
+}
+
+export interface CanvasCharacter {
+  name: string;
+  sprite_key: string;
+  position?: { x: number; y: number };
+  size?: number;
+  color?: string;
+  speed?: number;
+  behavior?: string;
+}
+
+export interface CanvasGameUI {
+  buttons?: CanvasButton[];
+  status_displays?: CanvasStatusDisplay[];
+}
+
+export interface CanvasButton {
+  id: string;
+  label: string;
+  position: string;
+  size?: string;
+  action: string;
+}
+
+export interface CanvasStatusDisplay {
+  id: string;
+  type: 'score' | 'timer' | 'lives';
+  position: string;
+  label: string;
 }
 
 export interface Tag {

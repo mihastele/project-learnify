@@ -35,6 +35,7 @@ ITEM_TYPE_CHOICES = [
     ("SORTING", "Sorting / Ordering"),
     ("DIAGRAM_LABEL", "Diagram Label"),
     ("WRITING", "Writing / Open Response"),
+    ("ADVANCED_CANVAS_GAME", "Advanced Canvas Game"),
 ]
 
 SUBJECT_CHOICES = [

@@ -10,6 +10,7 @@ class ItemCreateSerializer(serializers.Serializer):
         ("PRONUNCIATION", "PRONUNCIATION"), ("MATH_INPUT", "MATH_INPUT"),
         ("MATCHING", "MATCHING"), ("SORTING", "SORTING"),
         ("DIAGRAM_LABEL", "DIAGRAM_LABEL"), ("WRITING", "WRITING"),
+        ("ADVANCED_CANVAS_GAME", "ADVANCED_CANVAS_GAME"),
     ])
     prompt = serializers.CharField()
     hint = serializers.CharField(required=False, allow_blank=True, default="")
@@ -17,6 +18,34 @@ class ItemCreateSerializer(serializers.Serializer):
     sort_order = serializers.IntegerField(default=0)
     points = serializers.IntegerField(default=10)
     tag_names = serializers.ListField(child=serializers.CharField(), required=False, default=list)
+
+    def validate(self, data):
+        item_type = data.get("item_type")
+        metadata = data.get("metadata", {})
+        if item_type == "ADVANCED_CANVAS_GAME":
+            self._validate_canvas_game_config(metadata)
+        return data
+
+    @staticmethod
+    def _validate_canvas_game_config(metadata):
+        game_config = metadata.get("game_config", {})
+        if not game_config:
+            raise serializers.ValidationError({"metadata": "game_config is required for ADVANCED_CANVAS_GAME items."})
+        success = game_config.get("success_condition")
+        failure = game_config.get("failure_condition")
+        if not success:
+            raise serializers.ValidationError({"metadata": "game_config.success_condition is required."})
+        if not failure:
+            raise serializers.ValidationError({"metadata": "game_config.failure_condition is required."})
+        valid_success = {"score_threshold", "survive_for_seconds"}
+        if success.get("type") not in valid_success:
+            raise serializers.ValidationError({"metadata": f"success_condition.type must be one of: {valid_success}"})
+        valid_failure = {"lives_reached_zero", "time_expired"}
+        if failure.get("type") not in valid_failure:
+            raise serializers.ValidationError({"metadata": f"failure_condition.type must be one of: {valid_failure}"})
+        time_limit = game_config.get("time_limit")
+        if time_limit is not None and (not isinstance(time_limit, (int, float)) or time_limit <= 0):
+            raise serializers.ValidationError({"metadata": "time_limit must be a positive number."})
 
 
 class MediaCreateSerializer(serializers.Serializer):

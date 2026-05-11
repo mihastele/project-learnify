@@ -11,6 +11,7 @@ import MatchingItemView from './MatchingItemView';
 import SortingItemView from './SortingItemView';
 import DiagramLabelItemView from './DiagramLabelItemView';
 import WritingItemView from './WritingItemView';
+import AdvancedCanvasGameItemView from './AdvancedCanvasGameItemView';
 import styles from './ItemRenderer.module.css';
 
 interface Props {
@@ -30,6 +31,7 @@ const TYPE_COMPONENT: Record<string, string> = {
   SORTING: 'Sort Order',
   DIAGRAM_LABEL: 'Label Diagram',
   WRITING: 'Writing',
+  ADVANCED_CANVAS_GAME: 'Canvas Game',
 };
 
 export default function ItemRenderer({item, onAnswer}: Props) {
@@ -59,6 +61,8 @@ export default function ItemRenderer({item, onAnswer}: Props) {
         return <DiagramLabelItemView item={item} onAnswer={onAnswer} />;
       case 'WRITING':
         return <WritingItemView item={item} onAnswer={onAnswer} />;
+      case 'ADVANCED_CANVAS_GAME':
+        return <AdvancedCanvasGameItemView item={item} onAnswer={onAnswer} />;
       default:
         return (
           <div className={styles.fallback}>

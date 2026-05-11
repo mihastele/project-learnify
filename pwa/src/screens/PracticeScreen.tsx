@@ -2,9 +2,9 @@ import {useEffect, useState, useCallback} from 'react';
 import ItemRenderer from '../components/ItemRenderer';
 import {getNextItemsForSession} from '../services/scheduleService';
 import {computeItemState} from '../services/srs';
-import {saveAttempt, upsertItemState, ensureLearner} from '../db/database';
+import {saveAttempt, upsertItemState, ensureLearner, getAllItems} from '../db/database';
 import {Item, Attempt, ItemState, LearnerStats} from '../api/types';
-import {recordPractice} from '../api/client';
+import {getNextItems, recordPractice} from '../api/client';
 import styles from './PracticeScreen.module.css';
 
 function uuid(): string {
@@ -39,12 +39,18 @@ export default function PracticeScreen({learnerId, lessonId, onDone, onCancel}: 
   const [startTime] = useState(() => Date.now());
 
   useEffect(() => {
-    ensureLearner(learnerId).then(() =>
-      getNextItemsForSession(learnerId, lessonId).then(it => {
-        setItems(it);
-        setPhase(it.length === 0 ? 'complete' : 'practicing');
-      }),
-    );
+    ensureLearner(learnerId).then(async () => {
+      let it = await getNextItemsForSession(learnerId, lessonId);
+      if (it.length === 0 && lessonId) {
+        try {
+          it = await getNextItems(learnerId, 50, undefined, undefined, lessonId);
+        } catch {
+          // offline or server unreachable
+        }
+      }
+      setItems(it);
+      setPhase(it.length === 0 ? 'complete' : 'practicing');
+    });
   }, [learnerId, lessonId]);
 
   const handleAnswer = useCallback(
@@ -126,6 +132,23 @@ export default function PracticeScreen({learnerId, lessonId, onDone, onCancel}: 
   }
 
   if (phase === 'complete') {
+    const isEmpty = stats.correct === 0 && stats.incorrect === 0 && stats.partial === 0;
+    if (isEmpty) {
+      return (
+        <div className={styles.center}>
+          <div className={styles.doneCard}>
+            <span className={styles.doneIcon}>📭</span>
+            <h2 className={styles.doneTitle}>No Items Available</h2>
+            <p className={styles.emptyMsg}>
+              This lesson has no practice items yet. Ask your teacher to add some questions.
+            </p>
+            <button className={styles.doneBtn} onClick={onCancel}>
+              Go Back
+            </button>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className={styles.center}>
         <div className={styles.doneCard}>

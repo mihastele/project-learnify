@@ -158,3 +158,11 @@
 }
 
 .doneBtn:hover { background: var(--clr-primary-dark); }
+
+.emptyMsg {
+  font-size: var(--text-sm);
+  color: var(--clr-text-muted);
+  text-align: center;
+  margin: 8px 0;
+  line-height: 1.5;
+}

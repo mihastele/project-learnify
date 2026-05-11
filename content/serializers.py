@@ -53,6 +53,8 @@ class ContentUnitListSerializer(serializers.ModelSerializer):
         ]
 
     def get_item_count(self, obj):
+        if hasattr(obj, "_prefetched_objects_cache") and "items" in obj._prefetched_objects_cache:
+            return len(obj._prefetched_objects_cache["items"])
         return obj.items.count()
 
 

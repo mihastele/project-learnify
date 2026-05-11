@@ -79,7 +79,8 @@ class TeacherViewSet(viewsets.ViewSet):
         except ContentUnit.DoesNotExist:
             return Response({"error": "Lesson not found"}, status=404)
 
-        serializer = ItemSerializer(data=request.data)
+        data = {**request.data, "content_unit": lesson_id}
+        serializer = ItemSerializer(data=data)
         if serializer.is_valid():
             serializer.save(content_unit=unit)
             return Response(serializer.data, status=201)

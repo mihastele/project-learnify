@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import date
 
@@ -7,6 +8,8 @@ from gamification.models import Badge, DailyActivity, LearnerBadge, LearnerStats
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
+logger = logging.getLogger(__name__)
 
 from .models import Attempt, ItemState, Learner
 from .serializers import AttemptSerializer, ItemStateSerializer, LearnerSerializer
@@ -35,31 +38,37 @@ class LearnerViewSet(viewsets.ModelViewSet):
 
         subject = request.query_params.get("subject")
         item_type = request.query_params.get("item_type")
+        content_unit = request.query_params.get("content_unit")
+
+        base_qs = Item.objects.all()
+        if subject:
+            base_qs = base_qs.filter(content_unit__subject=subject)
+        if item_type:
+            base_qs = base_qs.filter(item_type=item_type)
+        if content_unit:
+            base_qs = base_qs.filter(content_unit_id=content_unit)
 
         states = ItemState.objects.filter(learner=learner).select_related("item")
         seen_item_ids = set(states.values_list("item_id", flat=True))
 
         due_ids = list(
-            states.filter(next_due__lte=now)
+            states.filter(next_due__lte=now, item_id__in=base_qs.values("id"))
             .order_by("ease_factor")
             .values_list("item_id", flat=True)[:limit]
         )
 
         slots_left = limit - len(due_ids)
         if slots_left > 0:
-            new_qs = Item.objects.exclude(id__in=seen_item_ids)
-            if subject:
-                new_qs = new_qs.filter(content_unit__subject=subject)
-            if item_type:
-                new_qs = new_qs.filter(item_type=item_type)
+            new_qs = base_qs.exclude(id__in=seen_item_ids)
             new_ids = list(
                 new_qs.order_by("?")[:slots_left].values_list("id", flat=True)
             )
             due_ids.extend(new_ids)
 
         if len(due_ids) < limit:
+            valid_ids = set(base_qs.values_list("id", flat=True))
             more_due = (
-                states.filter(item_id__in=seen_item_ids)
+                states.filter(item_id__in=seen_item_ids & valid_ids)
                 .exclude(item_id__in=due_ids)
                 .order_by("next_due")
                 .values_list("item_id", flat=True)[: slots_left]
@@ -70,6 +79,15 @@ class LearnerViewSet(viewsets.ModelViewSet):
         from content.serializers import ItemSerializer
 
         serializer = ItemSerializer(items, many=True)
+
+        if content_unit and not due_ids:
+            total = base_qs.count()
+            logger.warning(
+                "next_items: learner=%s content_unit=%s returned 0 items (total=%s in unit). "
+                "Check that items exist and are assigned to this content_unit.",
+                learner.id, content_unit, total,
+            )
+
         return Response(serializer.data)
 
     @action(detail=True, methods=["get"])

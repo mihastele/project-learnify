@@ -72,10 +72,11 @@ export async function fetchItems(unitId: string): Promise<Item[]> {
   return request<Item[]>(`/content_units/${unitId}/items/`);
 }
 
-export async function getNextItems(learnerId: string, limit = 20, subject?: string, itemType?: string) {
+export async function getNextItems(learnerId: string, limit = 20, subject?: string, itemType?: string, contentUnit?: string) {
   const qs = new URLSearchParams({limit: String(limit)});
   if (subject) qs.set('subject', subject);
   if (itemType) qs.set('item_type', itemType);
+  if (contentUnit) qs.set('content_unit', contentUnit);
   return request<Item[]>(`/learners/${learnerId}/next_items/?${qs.toString()}`);
 }
 
