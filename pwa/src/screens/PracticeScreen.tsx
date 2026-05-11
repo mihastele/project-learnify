@@ -168,7 +168,7 @@ export default function PracticeScreen({learnerId, lessonId, onDone, onCancel}: 
         </div>
       </div>
       <div className={styles.itemContainer}>
-        <ItemRenderer item={current} onAnswer={handleAnswer} />
+        <ItemRenderer key={current.id} item={current} onAnswer={handleAnswer} />
       </div>
     </div>
   );

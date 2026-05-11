@@ -19,9 +19,12 @@ export default function MathInputItemView({item, onAnswer}: Props) {
   const handleSubmit = useCallback(() => {
     if (submitted) return;
     setSubmitted(true);
-    const isCorrect = answer.trim() === correctAnswer.trim();
+    const correctAnsStr = String(correctAnswer);
+    const isCorrect = answer.trim() === correctAnsStr.trim();
     setCorrect(isCorrect);
-    onAnswer(isCorrect, {given_answer: answer, correct_answer: correctAnswer});
+    setTimeout(() => {
+      onAnswer(isCorrect, {given_answer: answer, correct_answer: correctAnsStr});
+    }, 1500);
   }, [answer, correctAnswer, submitted, onAnswer]);
 
   return (
